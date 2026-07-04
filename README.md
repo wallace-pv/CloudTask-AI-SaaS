@@ -5,9 +5,10 @@
 
 <!-- Título e breve descrição do repositório -->
 <div align="center">
-  <h1>CloudTask AI SaaS — Semana 6 (Aulas 11 e 12) — final da disciplina</h1>
-  <p><b>Branch <code>semana-06-cdk-final</code> — cobre as Aulas 11 e 12; consolida toda a jornada das 6 semanas.</b></p>
-  <p>API FastAPI + PostgreSQL + CRUD com <b>uploads S3/local</b>, <b>Kubernetes (Kind→EKS)</b>, <b>HPA</b> e <b>eventos (DynamoDB)</b> — agora fechando com <b>Infraestrutura como Código (AWS CDK)</b> (Aula 11) e os <b>materiais de entrega final</b> (Aula 12).</p>
+  <h1>CloudTask AI SaaS — Projeto Integrador (Entrega Final)</h1>
+  <p><b>Trabalho avaliativo da disciplina <i>Computação em Nuvem</i> — UNINTER.</b></p>
+  <p>Aplicação cloud-native completa em <b>Python + FastAPI</b>, com persistência em <b>PostgreSQL/RDS</b>, uploads em <b>Amazon S3/local</b>, orquestração com <b>Kubernetes (Kind/EKS)</b>, escalabilidade com <b>HPA</b>, eventos no <b>DynamoDB</b> e infraestrutura provisionada via <b>AWS CDK</b>.</p>
+  <p>👉 <b><a href="docs/entrega-final/RELATORIO_FINAL.md">CLIQUE AQUI PARA ACESSAR O RELATÓRIO FINAL DA EQUIPE</a></b> 👈</p>
 </div>
 
 <p align="center">
@@ -245,11 +246,18 @@ cdk destroy --all         # 🔥 apaga tudo
 ```
 Cada branch `aula-XX-final` contém **somente o estado acumulado até aquela aula** e funciona de forma independente.
 
-## Participantes
+## Participantes (Equipe do Projeto)
 
-| [<img src="https://avatars3.githubusercontent.com/u/60905310?s=460&v=4" width="75px;"/>](https://github.com/guipatriota) |
-| :------------------------------------------------------------------------------------------------------------------------: |
-| [Prof. Guilherme Patriota](https://github.com/guipatriota) |
+| Nome | RU |
+| :--- | :---: |
+| **Wallace Fernando Guedes da Silva** | 5146520 |
+| **Pablo Patrick Machado** | 5200651 |
+| **Andrey Gabriel Custódio da Silva** | 5246826 |
+| **Christian Felipe de Souza Netto** | 4116816 |
+| **Jessica do Nascimento Cordeiro** | 5345789 |
+
+- **Repositório do Projeto no GitHub:** [https://github.com/wallace-pv/CloudTask-AI-SaaS.git](https://github.com/wallace-pv/CloudTask-AI-SaaS.git)
+- **Relatório Final:** [`docs/entrega-final/RELATORIO_FINAL.md`](docs/entrega-final/RELATORIO_FINAL.md)
 
 ## Estrutura final do projeto (referência — aula 12)
 
