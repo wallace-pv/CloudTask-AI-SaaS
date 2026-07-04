@@ -1,0 +1,15 @@
+# =============================================================================
+# namespace.yaml (AWS/EKS) — namespace dedicado da aplicação no cluster EKS.
+# -----------------------------------------------------------------------------
+# Cópia self-contained do namespace base. POR QUÊ copiar em vez de referenciar
+# `../namespace.yaml`: o Kustomize, por segurança, NÃO deixa um kustomization
+# incluir arquivos ACIMA da sua própria pasta (`../`). Manter cada pasta
+# autocontida faz `kubectl apply -k infra/k8s/aws/` funcionar sem flags extras.
+# =============================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cloudtask
+  labels:
+    app.kubernetes.io/name: cloudtask
+    app.kubernetes.io/part-of: cloudtask-ai-saas

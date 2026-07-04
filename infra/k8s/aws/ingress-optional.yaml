@@ -1,0 +1,50 @@
+# =============================================================================
+# ingress-optional.yaml — HTTPS na borda com ALB + ACM (OPCIONAL / produção).
+# -----------------------------------------------------------------------------
+# NÃO aplique no Learner Lab. Este arquivo é DEMONSTRATIVO: mostra como, numa
+# conta AWS real com domínio próprio, o HTTPS é entregue.
+#
+# COMO FUNCIONA:
+#   * O AWS Load Balancer Controller (instalado no cluster) lê este Ingress e
+#     cria um Application Load Balancer (ALB).
+#   * O certificado TLS fica no ALB (gerenciado pelo ACM). O Pod só fala HTTP
+#     interno — por isso BEHIND_PROXY="true" no ConfigMap.
+#   * A annotation `ssl-redirect` força HTTP -> HTTPS na borda.
+#
+# POR QUÊ "optional": o AWS Academy Learner Lab NÃO permite criar as IAM roles
+#   do ALB Controller nem registrar domínio/ACM. Logo:
+#     - Na aula (Learner Lab): use só o Service LoadBalancer (HTTP).
+#     - HTTPS REAL (ALB+ACM+domínio): Aula 12, na conta pessoal do professor.
+#
+# Para usar de verdade, você precisaria antes:
+#   1. Instalar o AWS Load Balancer Controller no cluster.
+#   2. Ter um certificado no ACM (ARN abaixo) e um domínio no Route53.
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cloudtask-api-ingress
+  namespace: cloudtask
+  annotations:
+    kubernetes.io/ingress.class: "alb"
+    alb.ingress.kubernetes.io/scheme: "internet-facing"
+    alb.ingress.kubernetes.io/target-type: "ip"
+    # Ouvir em HTTP (80) e HTTPS (443):
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+    # Redirect HTTP -> HTTPS:
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    # TROQUE pelo ARN do seu certificado ACM (conta real, NÃO Learner Lab):
+    # alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:<ACCOUNT>:certificate/<ID>"
+spec:
+  rules:
+    # TROQUE pelo seu domínio (Route53). Sem domínio, não use Ingress.
+    - host: cloudtask.exemplo.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cloudtask-api-lb
+                port:
+                  number: 80

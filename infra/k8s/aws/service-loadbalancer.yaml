@@ -1,0 +1,38 @@
+# =============================================================================
+# service-loadbalancer.yaml — expõe a API na internet via Load Balancer da AWS.
+# -----------------------------------------------------------------------------
+# O QUE MUDA em relação ao api-service.yaml local (NodePort):
+#   * type: LoadBalancer — no EKS, isso faz a AWS PROVISIONAR um ELB/NLB
+#     público automaticamente. O `EXTERNAL-IP` vira o DNS do Load Balancer.
+#   * No Kind (local) usávamos NodePort 30080 porque não há nuvem para criar LB.
+#
+# COMO ACESSAR depois do apply:
+#   kubectl get svc -n cloudtask          # espere o EXTERNAL-IP/DNS aparecer
+#   curl http://<DNS-DO-LB>/health        # ~1-3 min para o ELB provisionar
+#
+# HTTPS: aqui expomos HTTP (porta 80). O TLS de verdade fica no ALB + ACM, via
+#   Ingress (ver ingress-optional.yaml) — demonstrado na conta do professor na
+#   Aula 12, pois o Learner Lab não tem domínio/ACM.
+#
+# CUSTO (IMPORTANTE): o ELB cobra POR HORA enquanto existir. Ao terminar:
+#   kubectl delete -f infra/k8s/aws/service-loadbalancer.yaml   (ou -k aws/)
+#   ...senão o LB segue ligado consumindo crédito mesmo sem uso.
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudtask-api-lb
+  namespace: cloudtask
+  labels: { app: api }
+  # annotations:
+  #   # NLB em vez do Classic ELB (mais barato/rápido). Descomente se quiser:
+  #   service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+spec:
+  type: LoadBalancer
+  selector:
+    app: api          # casa com os Pods do deployment-eks.yaml
+  ports:
+    - name: http
+      port: 80        # porta pública do Load Balancer
+      targetPort: 8000  # porta do container (uvicorn)
+      protocol: TCP

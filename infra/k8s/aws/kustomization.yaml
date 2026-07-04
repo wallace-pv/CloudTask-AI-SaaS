@@ -1,0 +1,26 @@
+# =============================================================================
+# kustomization.yaml (AWS/EKS) — `kubectl apply -k infra/k8s/aws/`.
+# -----------------------------------------------------------------------------
+# SELF-CONTAINED: esta pasta tem TODOS os manifests de que precisa (namespace,
+# postgres, config, deployment, service). POR QUÊ não referenciar os do base
+# com `../`: o Kustomize, por segurança, recusa incluir arquivos acima da pasta
+# do kustomization. Manter aws/ autocontido faz `kubectl apply -k infra/k8s/aws/`
+# rodar sem flags extras (e cada pasta funciona isolada, como as branches).
+#
+# POR QUÊ manter o Postgres-como-Pod: para a aula não exigir RDS. Em produção,
+# troque pelo RDS (ver README desta pasta) e remova as duas linhas postgres-*.
+#
+# O Ingress (ingress-optional.yaml) NÃO entra aqui de propósito: só vale em
+# conta real com ALB Controller + ACM. Aplique-o à mão se for o caso.
+# =============================================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml             # namespace 'cloudtask'
+  - postgres-deployment.yaml   # Postgres como Pod (troque por RDS em prod)
+  - postgres-service.yaml
+  - configmap.yaml             # config AWS (S3, behind-proxy)
+  # - secret.yaml              # crie a partir do secret.example.yaml; gitignored
+  - deployment-eks.yaml        # API com imagem do ECR
+  - service-loadbalancer.yaml  # expõe via ELB público

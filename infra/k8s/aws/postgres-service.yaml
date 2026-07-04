@@ -1,0 +1,23 @@
+# =============================================================================
+# postgres-service.yaml (AWS/EKS) — DNS interno estável do Postgres.
+# -----------------------------------------------------------------------------
+# Cópia self-contained do Service base. `ClusterIP`: só Pods de DENTRO do
+# cluster enxergam. DNS interno: `postgres.cloudtask.svc.cluster.local`.
+#
+# 🏭 Com RDS, este Service deixa de existir — a API fala direto com o endpoint
+#    do RDS (ver postgres-deployment.yaml desta pasta para o passo a passo).
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: cloudtask
+  labels: { app: postgres }
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+  ports:
+    - name: pg
+      port: 5432
+      targetPort: 5432

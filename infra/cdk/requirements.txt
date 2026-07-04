@@ -1,0 +1,8 @@
+# Dependências do app CDK (Aula 11). Instale dentro de infra/cdk/:
+#   python -m venv .venv && source .venv/bin/activate   (ou use o devcontainer)
+#   pip install -r requirements.txt
+#
+# aws-cdk-lib: a biblioteca do CDK v2 (todos os módulos: aws_s3, aws_ecr, aws_ec2...).
+# constructs : base de componentes do CDK (vem junto, mas fixamos a major).
+aws-cdk-lib>=2.140.0,<3.0.0
+constructs>=10.0.0,<11.0.0

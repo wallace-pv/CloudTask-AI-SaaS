@@ -1,0 +1,54 @@
+# =============================================================================
+# hpa.yaml — Horizontal Pod Autoscaler para a API no EKS (Aula 9).
+# -----------------------------------------------------------------------------
+# O QUE É: o HPA cria e remove réplicas (Pods) do Deployment automaticamente,
+#   olhando uma métrica (aqui, uso de CPU). É a ESCALA HORIZONTAL: sob carga,
+#   sobem Pods; quando a carga cai, eles voltam ao mínimo.
+#
+# PRÉ-REQUISITOS (senão o HPA fica com target "<unknown>" e NÃO escala):
+#   1. metrics-server instalado no cluster (`kubectl top pods` precisa funcionar).
+#   2. O Deployment alvo declara `resources.requests.cpu` — o HPA calcula a
+#      utilização como (uso atual / request). Sem request, não há base de cálculo.
+#      O cloudtask-api já pede 100m de CPU (ver deployment-eks.yaml).
+#
+# COMO APLICAR (standalone, não entra no kustomize para o aluno controlar quando
+#   ligar a escala):
+#     kubectl apply -f infra/k8s/aws/hpa.yaml
+#     kubectl get hpa -n cloudtask -w        # observar REPLICAS subir/descer
+#
+# CUSTO: mais réplicas podem exigir mais nós EC2 -> mais $/hora. Por isso o
+#   `maxReplicas` é baixo (5). Escalar NÃO é grátis. DESTRUA ao terminar a aula.
+# =============================================================================
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: cloudtask-api
+  namespace: cloudtask
+  labels: { app: api, component: backend }
+spec:
+  # Alvo: o Deployment da API no EKS (deployment-eks.yaml -> name: cloudtask-api).
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: cloudtask-api
+  # Faixa de escala. Começa em 2 (alta disponibilidade) e nunca passa de 5
+  # (teto de custo para o Learner Lab).
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    # Métrica de recurso = CPU. averageUtilization é uma PORCENTAGEM do request:
+    # 60% de 100m = 60m. Se a média dos Pods passar disso, o HPA adiciona réplica.
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+  # behavior (opcional, mas didático): controla a velocidade de subir/descer.
+  # POR QUÊ estabilizar a descida: sem isso, uma queda momentânea de carga
+  # derrubaria réplicas e elas subiriam de novo logo após (efeito "flapping").
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 120  # espera 2 min de calmaria antes de reduzir
+    scaleUp:
+      stabilizationWindowSeconds: 0    # sobe imediatamente quando a carga chega

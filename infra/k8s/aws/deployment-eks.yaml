@@ -1,0 +1,81 @@
+# =============================================================================
+# deployment-eks.yaml — API FastAPI rodando no Amazon EKS.
+# -----------------------------------------------------------------------------
+# O QUE MUDA em relação ao api-deployment.yaml local (Kind):
+#   * image: vem do ECR (registry na nuvem), não mais `cloudtask-api:dev` local.
+#     TROQUE <ACCOUNT> pelo ID da sua conta AWS (12 dígitos). O script
+#     scripts/semana-04-ecr/build-push-ecr.sh imprime a linha exata no final.
+#   * imagePullPolicy: Always — sempre puxar a tag do ECR (a `latest` pode ter
+#     mudado). Em produção, prefira tag com SHA do commit + IfNotPresent.
+#   * replicas: 2 — alta disponibilidade. Em cluster com nós em 2+ AZs, isso
+#     espalha os Pods entre zonas (resiliência a falha de uma AZ).
+#
+# O QUE PERMANECE igual ao Kind (de propósito, para o aluno comparar):
+#   * initContainer wait-for-postgres (a App roda create_all no startup).
+#   * probes /health (liveness) e /health/ready (readiness).
+#   * config via ConfigMap + Secret.
+#
+# CUSTO: este Deployment em si não cobra; o que cobra é o cluster EKS, os nós
+#   EC2 e o Load Balancer (Service). DESTRUA ao terminar a aula.
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudtask-api
+  namespace: cloudtask
+  labels: { app: api, component: backend }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: api }
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels: { app: api, component: backend }
+    spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - >-
+              until pg_isready -h postgres -p 5432 -U "$POSTGRES_USER";
+              do echo "esperando postgres..."; sleep 2; done;
+              echo "postgres pronto."
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef: { name: cloudtask-secrets, key: POSTGRES_USER }
+      containers:
+        - name: api
+          # ▼▼▼ TROQUE <ACCOUNT> e a região se necessário ▼▼▼
+          image: <ACCOUNT>.dkr.ecr.us-east-1.amazonaws.com/cloudtask-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: cloudtask-config
+            - secretRef:
+                name: cloudtask-secrets
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          resources:
+            requests: { cpu: "100m", memory: "128Mi" }
+            limits:   { cpu: "500m", memory: "256Mi" }

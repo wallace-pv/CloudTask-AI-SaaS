@@ -1,0 +1,68 @@
+# =============================================================================
+# postgres-deployment.yaml (AWS/EKS) — Postgres como Pod no cluster EKS.
+# -----------------------------------------------------------------------------
+# Cópia self-contained do Postgres base (ver nota no namespace.yaml sobre POR
+# QUÊ não usar `../`).
+#
+# ⚠️ MESMA limitação didática do Kind: SEM volume persistente (`emptyDir`), os
+#    dados somem se o Pod morre. Isso é INTENCIONAL para a aula repetir a lição.
+#
+# 🏭 EM PRODUÇÃO na AWS, troque este Pod por **Amazon RDS**:
+#    1. remova este arquivo e o postgres-service.yaml do kustomization.yaml;
+#    2. aponte POSTGRES_HOST (configmap.yaml) para o endpoint do RDS;
+#    3. ponha credenciais do RDS no Secret (DATABASE_URL).
+#    Ver docs/praticas/09-deploy-manual-aws.md §7.
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: cloudtask
+  labels: { app: postgres, component: database }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: postgres }
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels: { app: postgres, component: database }
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+              name: pg
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef: { name: cloudtask-secrets, key: POSTGRES_USER }
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: cloudtask-secrets, key: POSTGRES_PASSWORD }
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef: { name: cloudtask-config, key: POSTGRES_DB }
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          resources:
+            requests: { cpu: "100m", memory: "128Mi" }
+            limits:   { cpu: "500m", memory: "512Mi" }
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: pgdata
+          emptyDir: {}

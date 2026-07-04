@@ -1,0 +1,42 @@
+# =============================================================================
+# configmap.yaml (AWS/EKS) — configs NÃO sensíveis para o deploy na nuvem.
+# -----------------------------------------------------------------------------
+# Diferenças em relação ao ConfigMap local (infra/k8s/configmap.yaml):
+#   * BEHIND_PROXY/FORCE_HTTPS: na nuvem há um Load Balancer na frente. O TLS
+#     (HTTPS) termina no ELB/ALB; o Pod fala HTTP interno e confia nos headers
+#     `X-Forwarded-*`. Por isso BEHIND_PROXY="true".
+#   * STORAGE_MODE: aqui é a hora de usar S3 de verdade (Aula 5). Para quem
+#     ainda quer testar sem bucket, troque para "local".
+#
+# Mantém o MESMO nome (cloudtask-config) do base, mas este arquivo só é
+# aplicado pelo kustomization de aws/ (infra/k8s/aws/kustomization.yaml).
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudtask-config
+  namespace: cloudtask
+data:
+  APP_ENV: "production"
+  LOG_LEVEL: "INFO"
+  APP_PORT: "8000"
+
+  # Postgres: nesta aula seguimos com o Pod de Postgres (mesmo do Kind) para
+  # não exigir RDS. EM PRODUÇÃO REAL: troque POSTGRES_HOST pelo endpoint do
+  # RDS e remova o Pod de Postgres (ver README desta pasta, §"Postgres x RDS").
+  POSTGRES_HOST: "postgres"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "cloudtask"
+
+  # Upload em S3 (Aula 5). Para testar sem bucket, use "local".
+  STORAGE_MODE: "s3"
+  AWS_REGION: "us-east-1"
+  S3_BUCKET_NAME: "TROQUE-pelo-seu-bucket"
+  LOCAL_UPLOADS_DIR: "/data/uploads"
+
+  # Estamos atrás de um Load Balancer (ELB/ALB) que faz o TLS na borda.
+  # FORCE_HTTPS fica "false" porque o Learner Lab expõe HTTP (sem domínio/ACM).
+  # Em produção com ALB + ACM + domínio, seria "true".
+  FORCE_HTTPS: "false"
+  BEHIND_PROXY: "true"
+  TRUSTED_HOSTS: "*"
