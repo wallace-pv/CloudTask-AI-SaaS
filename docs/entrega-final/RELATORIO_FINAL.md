@@ -78,40 +78,71 @@ A arquitetura do CloudTask AI SaaS foi desenhada seguindo os pilares do AWS Well
 
 ## 5. Como Executar o Projeto (Guia Reprodutível)
 
+Abaixo estão as instruções passo a passo para a **reprodução completa da infraestrutura na nuvem AWS via AWS CDK** (modo principal de avaliação) e também a opção de teste rápido local com Docker Compose.
+
 ### Pré-requisitos
-- **Docker & Docker Desktop** instalados e rodando.
-- **Git** instalado.
-- **VS Code** com a extensão *Dev Containers* (recomendado).
+- **AWS CLI v2** configurado com credenciais ativas da conta AWS (`aws configure`).
+- **Node.js 18+ e AWS CDK CLI** instalados (`npm install -g aws-cdk`).
+- **Python 3.11+** com `pip`.
+- **Git** e **Docker** instalados.
 
-### Passo a Passo (Modo Local via Docker Compose)
+---
 
-1. **Clonar o repositório da turma:**
+### Opção A: Deploy Completo na Nuvem AWS (via AWS CDK)
+
+1. **Clonar o repositório da equipe:**
    ```bash
    git clone https://github.com/wallace-pv/CloudTask-AI-SaaS.git
    cd CloudTask-AI-SaaS
    ```
 
-2. **Subir os contêineres em segundo plano:**
+2. **Acessar o diretório de IaC e instalar as dependências do CDK:**
+   ```bash
+   cd infra/cdk
+   pip install -r requirements.txt
+   ```
+
+3. **Verificar a conectividade com a AWS e sintetizar os templates CloudFormation:**
+   ```bash
+   aws sts get-caller-identity
+   cdk synth
+   ```
+
+4. **Executar o deploy de todas as pilhas na AWS:**
+   ```bash
+   cdk deploy --all --require-approval never
+   ```
+   > **Nota de Provisionamento:** O comando provisionará em ordem automática as 6 pilhas do projeto: `CloudTaskStorage` (Bucket S3), `CloudTaskEcr` (Repositório ECR), `CloudTaskNetwork` (VPC isolada sem custo de NAT Gateway), `CloudTaskEvents` (Tabela DynamoDB para eventos), `CloudTaskDatabase` (RDS PostgreSQL db.t3.micro com senha no Secrets Manager) e `CloudTaskCompute` (3 instâncias EC2 rodando Edge Caddy HTTPS, API REST e Grafana).
+
+5. **Acessar o SaaS nos links gerados nos Outputs da pilha `CloudTaskCompute`:**
+   Ao final do deploy, o terminal exibirá as URLs públicas com certificado TLS válido em `*.sslip.io`:
+   - **🌐 Frontend Web SaaS:** `https://<ip-da-instancia>.sslip.io/`  
+     *(Autenticação padrão da demonstração: usuário `admin` / senha `admin#123`)*
+   - **📖 Swagger UI (API REST):** `https://<ip-da-instancia>.sslip.io/api/docs`
+   - **📊 Observabilidade (Grafana + CloudWatch):** `https://<ip-da-instancia>.sslip.io/grafana/`
+
+6. **Limpeza e Destruição Total da Infraestrutura (FinOps):**
+   Após testar e avaliar a infraestrutura na AWS, execute a destruição para evitar qualquer custo na conta:
+   ```bash
+   cdk destroy --all --force
+   ```
+
+---
+
+### Opção B: Execução Rápida Local (via Docker Compose)
+
+Para desenvolvimento ou teste offline sem consumo de nuvem:
+
+1. **Na raiz do repositório, suba os serviços containerizados:**
    ```bash
    docker compose up -d --build
    ```
 
-3. **Verificar se a API e o Banco de Dados estão rodando:**
-   ```bash
-   docker ps
-   # Deve listar cloudtask-api (porta 8000) e cloudtask-db (porta 5432)
-   ```
+2. **Verifique os contêineres e acesse o Swagger local:**
+   - **Swagger UI:** [http://localhost:8000/docs](http://localhost:8000/docs)
+   - **Health Check:** `curl http://localhost:8000/health`
 
-4. **Testar a saúde da API:**
-   ```bash
-   curl http://localhost:8000/health
-   # Resposta esperada: {"status":"ok"}
-   ```
-
-5. **Acessar a Documentação Interativa (Swagger UI):**
-   - Abra no navegador: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-6. **Derrubar o ambiente e limpar recursos:**
+3. **Para encerrar e limpar o ambiente local:**
    ```bash
    docker compose down
    ```
