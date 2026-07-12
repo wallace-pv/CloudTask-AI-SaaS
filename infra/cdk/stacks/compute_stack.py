@@ -34,6 +34,7 @@ from pathlib import Path
 
 from aws_cdk import CfnOutput, CfnTag, Fn, Stack
 from aws_cdk import aws_ec2 as ec2
+from aws_cdk import aws_iam as iam
 from constructs import Construct
 
 # AMI Amazon Linux 2023 x86_64 (us-east-1). Troque com `ami_id=` se a região/data
@@ -161,14 +162,36 @@ class ComputeStack(Stack):
 
         subnet_id = vpc.public_subnets[0].subnet_id
 
+        # --- IAM Role e Instance Profile para compatibilidade com AWS própria ---
+        role = iam.Role(
+            self,
+            "ComputeInstanceRole",
+            assumed_by=iam.ServicePrincipal("ec2.amazonaws.com"),
+            managed_policies=[
+                iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore"),
+                iam.ManagedPolicy.from_aws_managed_policy_name("CloudWatchReadOnlyAccess"),
+            ],
+        )
+        role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
+                resources=["*"],
+            )
+        )
+
+        instance_profile = iam.CfnInstanceProfile(
+            self,
+            "ComputeInstanceProfile",
+            roles=[role.role_name],
+        )
+
         def make(name: str, itype: str, script: str) -> ec2.CfnInstance:
             return ec2.CfnInstance(
                 self,
                 name,
                 image_id=ami_id,
                 instance_type=itype,
-                key_name="vockey",
-                iam_instance_profile="LabInstanceProfile",
+                iam_instance_profile=instance_profile.ref,
                 subnet_id=subnet_id,
                 security_group_ids=[sg.security_group_id],
                 user_data=Fn.base64(script),

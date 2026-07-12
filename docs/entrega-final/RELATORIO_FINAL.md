@@ -186,16 +186,22 @@ Os checklists de verificação preenchidos estão disponíveis diretamente na pa
 *(Para a geração do PDF final, adicione abaixo as capturas de tela obtidas rodando o projeto no VS Code e na AWS)*
 
 #### 1. Aplicação Funcionando (FastAPI & Swagger UI)
-`[ INSERIR AQUI PRINT DO NAVEGADOR EM http://localhost:8000/docs COM A API ATIVA ]`
+Comprovação da API respondendo na versão 0.6.0 com endpoints de saúde, tarefas e uploads:
+![Swagger UI Funcionando](imagens/Captura%20de%20tela%202026-07-11%20204928.png)
+![Health Check OK](imagens/Captura%20de%20tela%202026-07-11%20205109.png)
 
 #### 2. Contêineres Docker Ativos no Terminal
-`[ INSERIR AQUI PRINT DO TERMINAL NO VS CODE MOSTRANDO A SAÍDA DO COMANDO: docker ps ]`
+Execução dos serviços containerizados (`cloudtask-api` e `cloudtask-db` saudável via Docker):
+![Contêineres Docker Ativos](imagens/Captura%20de%20tela%202026-07-11%20204840.png)
 
-#### 3. Execução de CRUD de Tarefas e Upload de Arquivos
-`[ INSERIR AQUI PRINT DE UMA REQUISIÇÃO POST /tasks E POST /uploads COM SUCESSO ]`
+#### 3. Execução do SaaS na Nuvem (Frontend & CRUD de Tarefas)
+Acesso ao endereço público em nuvem (`https://54-81-74-186.sslip.io`) servido pelo Edge Server (Caddy) com certificado HTTPS e quadro de tarefas funcional:
+![Quadro de Tarefas Web na Nuvem](imagens/Captura%20de%20tela%202026-07-11%20213606.png)
 
-#### 4. Kubernetes Funcionando (Pods e Serviços Ativos)
-`[ INSERIR AQUI PRINT DO TERMINAL MOSTRANDO: kubectl get pods -n cloudtask ]`
+#### 4. Deploy da Infraestrutura como Código (AWS CDK)
+Provisionamento completo das pilhas (`CloudTaskStorage`, `CloudTaskEcr`, `CloudTaskNetwork`, `CloudTaskEvents`, `CloudTaskDatabase` e `CloudTaskCompute`) na AWS:
+![Deploy AWS CDK Sucesso](imagens/Captura%20de%20tela%202026-07-11%20213251.png)
 
-#### 5. Deploy na Nuvem (AWS EKS / S3 / DynamoDB)
-`[ INSERIR AQUI PRINT DO CONSOLE AWS OU DO TERMINAL ACESSANDO O DNS DO LOAD BALANCER NA NUVEM ]`
+#### 5. Observabilidade e Monitoramento (Grafana & Amazon CloudWatch)
+Dashboard de observabilidade monitorando consumo de CPU das instâncias EC2, capacidade do Amazon DynamoDB e conexões ativas do banco RDS PostgreSQL:
+![Dashboard Grafana Observabilidade CloudWatch](imagens/Captura%20de%20tela%202026-07-11%20213539.png)
