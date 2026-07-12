@@ -11,37 +11,37 @@ demo na nuvem.
 
 ## Antes do deploy
 
-- [ ] Credenciais AWS válidas: `aws sts get-caller-identity` retorna seu ARN.
-- [ ] Região correta: `aws configure get region` (`us-east-1`).
-- [ ] Imagem no ECR: `aws ecr list-images --repository-name cloudtask-api`.
-- [ ] `.env` / Secret revisados (sem placeholders tipo `USER:SENHA@HOST`).
-- [ ] Banco definido: RDS criado **ou** Postgres como Pod (ciente do trade-off).
+- [x] Credenciais AWS válidas: `aws sts get-caller-identity` retorna seu ARN.
+- [x] Região correta: `aws configure get region` (`us-east-1`).
+- [x] Imagem no ECR: `aws ecr list-images --repository-name cloudtask-api`.
+- [x] `.env` / Secret revisados (sem placeholders tipo `USER:SENHA@HOST`).
+- [x] Banco definido: RDS criado **ou** Postgres como Pod (ciente do trade-off).
 
 ## Durante (subir)
 
-- [ ] Cluster EKS pronto: `kubectl get nodes` em `Ready`.
-- [ ] metrics-server ok (se for usar HPA): `kubectl top nodes` lista CPU.
-- [ ] `kubectl apply -k infra/k8s/aws/` aplicado sem erro.
-- [ ] Pods `Running`: `kubectl get pods -n cloudtask`.
-- [ ] Serviço acessível: `curl http://<ELB>/health` → 200, `/health/ready` → db ok.
+- [x] Cluster EKS pronto: `kubectl get nodes` em `Ready`.
+- [x] metrics-server ok (se for usar HPA): `kubectl top nodes` lista CPU.
+- [x] `kubectl apply -k infra/k8s/aws/` aplicado sem erro.
+- [x] Pods `Running`: `kubectl get pods -n cloudtask`.
+- [x] Serviço acessível: `curl http://<ELB>/health` → 200, `/health/ready` → db ok.
 
 ## Verificação funcional (demonstrar)
 
-- [ ] CRUD: criar/listar/atualizar/excluir tarefa (Swagger ou curl).
-- [ ] Upload: `POST /uploads` (local ou S3) e download.
-- [ ] Evento: criar tarefa gera `task.created` (`GET /events`).
-- [ ] (Opcional) HPA: gerar carga e ver réplicas subir/descer.
+- [x] CRUD: criar/listar/atualizar/excluir tarefa (Swagger ou curl).
+- [x] Upload: `POST /uploads` (local ou S3) e download.
+- [x] Evento: criar tarefa gera `task.created` (`GET /events`).
+- [x] (Opcional) HPA: gerar carga e ver réplicas subir/descer.
 
 ## 🔥 Depois (destruir — OBRIGATÓRIO)
 
 > Ordem importa: **Service LoadBalancer primeiro** (libera o ELB), cluster por último.
 
-- [ ] `kubectl delete -k infra/k8s/aws/` (apaga workloads + ELB).
-- [ ] `eksctl delete cluster --name <cluster>` (ou Console → Delete).
-- [ ] RDS apagado (se criado): `aws rds delete-db-instance ... --skip-final-snapshot`.
-- [ ] DynamoDB apagado: `aws dynamodb delete-table --table-name cloudtask-events`.
-- [ ] S3 de teste apagado.
-- [ ] `cdk destroy --all` (se usou CDK).
+- [x] `kubectl delete -k infra/k8s/aws/` (apaga workloads + ELB).
+- [x] `eksctl delete cluster --name <cluster>` (ou Console → Delete).
+- [x] RDS apagado (se criado): `aws rds delete-db-instance ... --skip-final-snapshot`.
+- [x] DynamoDB apagado: `aws dynamodb delete-table --table-name cloudtask-events`.
+- [x] S3 de teste apagado.
+- [x] `cdk destroy --all` (se usou CDK).
 
 ## Sweep final (tudo vazio = zero cobrança)
 
@@ -54,5 +54,5 @@ aws ec2 describe-addresses --query "Addresses[?AssociationId==null].PublicIp" --
 aws rds describe-db-instances --query "DBInstances[].DBInstanceIdentifier" --output text --region us-east-1
 ```
 
-- [ ] Tudo acima **vazio**.
-- [ ] (24h depois) Cost Explorer / Billing sem gasto inesperado.
+- [x] Tudo acima **vazio**.
+- [x] (24h depois) Cost Explorer / Billing sem gasto inesperado.
